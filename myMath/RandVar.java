@@ -4,17 +4,18 @@
  * and open the template in the editor.
  */
 
+package myMath;
+
+import java.util.Random;
+
 /**
  *
  * @author mahdi
  */
-public class Event {
-    double time;
-    int type;
-    static int ARRIVAL = 0;
-    static int DEPARTURE = 1;
-    public Event(double t, int y) {
-        this.time = t;
-        this.type = y;
+public class RandVar {
+    //gamma is rate
+    public static double exponential (double gamma)
+    {
+        return (1.0 / gamma) * (-Math.log(1.0 - Math.random()));
     }
 }
