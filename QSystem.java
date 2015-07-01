@@ -16,16 +16,19 @@ import myMath.RandVar;
 
 //M/M/c
 public class QSystem {
-    Queue customers;
-    Queue events;
+    PriorityQueue<Customer> customers;
+    PriorityQueue<Event> events;
     int capacity;
     int independentInRate;
     double serviceRate;
     QSystem nextHop;
     double totalCustomers, avgWaitingTime, servicedCustomers;
     double qLen, qLen2, PrevQChangeTime;
-    
-    public QSystem(Queue customers, Queue events, int capacity, int independentInRate, double serviceRate, QSystem nextHop) {
+    double avgQTime;
+    int counter;
+    double inService;
+    public QSystem(PriorityQueue<Customer> customers, PriorityQueue<Event> events, 
+            int capacity, int independentInRate, double serviceRate, QSystem nextHop) {
         this.customers = customers;
         this.events = events;
         this.capacity = capacity;
@@ -33,44 +36,65 @@ public class QSystem {
         this.nextHop = nextHop;
         this.serviceRate = serviceRate;
         this.avgWaitingTime = this.totalCustomers = this.servicedCustomers = qLen = qLen2 = PrevQChangeTime = 0.0;
+        avgQTime = 0.0;
+        counter = 0;
     }
     
     public void newArrival(Event event) {
         this.totalCustomers++;
-        if(this.customers.size() < this.capacity) {
+        Customer customer = new Customer(counter, event.time);
+        customer.init_arrival = event.time;
+        customer.inQ = 0.0;
+        if(event.cust != null) {
+            customer.init_arrival = event.cust.arrivalTime;
+            customer.inQ = event.cust.inQ;
+        }
+        counter++;
+        if(inService < capacity) {
             double t = event.time+RandVar.exponential(serviceRate);
-            events.add(new Event(t, Event.DEPARTURE, this));
+            Event depEvent = new Event(t, Event.DEPARTURE, this);
+            customer.srvBeg = event.time;
+            depEvent.cust = customer;
+            inService++;
+            events.add(depEvent);
             qLen = ((totalCustomers-1)/totalCustomers)*qLen + (1/totalCustomers)*0;
             qLen2 = 0*(event.time-PrevQChangeTime)/event.time+qLen2*(PrevQChangeTime)/event.time;
-            //System.out.println("customer came at: " + event.time + " and leaves at: " + t);
         }else {
-            qLen = ((totalCustomers-1)/totalCustomers)*qLen + (1/totalCustomers)*(customers.size()-capacity);
-            qLen2 = (customers.size()-capacity)*(event.time-PrevQChangeTime)/event.time+qLen2*(PrevQChangeTime)/event.time;
-            //System.out.println("customer came at: " + event.time);
+            customers.add(customer);
+            qLen = ((totalCustomers-1)/totalCustomers)*qLen + (1/totalCustomers)*(customers.size()-1);
+            qLen2 = (customers.size()-1)*(event.time-PrevQChangeTime)/event.time+qLen2*((PrevQChangeTime)/event.time);
         }
         PrevQChangeTime = event.time;
-        customers.add(new Customer(event.time));
-        events.add(new Event(event.time+RandVar.exponential(independentInRate), Event.ARRIVAL, this));
+        
+        if(independentInRate != 0)
+            events.add(new Event(event.time+RandVar.exponential(independentInRate), Event.ARRIVAL, this));
     }
     
     public void finishService(Event event) {
-        if(customers.size() <= capacity)
-            qLen2 = 0*(event.time-PrevQChangeTime)/event.time+qLen2*(PrevQChangeTime)/event.time;
-        else
-            qLen2 = (customers.size()-capacity)*(event.time-PrevQChangeTime)/event.time+qLen2*(PrevQChangeTime)/event.time;
+        qLen2 = (customers.size())*(event.time-PrevQChangeTime)/event.time+qLen2*(PrevQChangeTime)/event.time;
         PrevQChangeTime = event.time;
-        Customer customer = (Customer)customers.poll();
+        Customer customer = event.cust;
+        inService--;
         this.avgWaitingTime = this.avgWaitingTime*(this.servicedCustomers/(1+this.servicedCustomers))
-                +(event.time-customer.arrivalTime)*(1.0/(1+this.servicedCustomers));
+                +(event.time-customer.init_arrival)*(1.0/(1+this.servicedCustomers));
+        customer.inQ = customer.inQ + customer.srvBeg-customer.arrivalTime;
+        avgQTime = avgQTime*(this.servicedCustomers/(1+this.servicedCustomers))
+                + customer.inQ*(1.0/(1+this.servicedCustomers));
         this.servicedCustomers++;
-        //System.out.println("customer came at: " + customer.arrivalTime + " and leaved at: " + event.time);
-        //System.out.println("time in system: " + (event.time-customer.arrivalTime));
         //first capacity-1 customer has their departure event set already
         //you should wait until begining of service to schedule departure event
-        if(customers.size() >= capacity ) {
-            events.add(new Event(event.time+RandVar.exponential(serviceRate), Event.DEPARTURE, this));
+        if(!customers.isEmpty()) {
+            Event depEvent = new Event(event.time+RandVar.exponential(serviceRate), Event.DEPARTURE, this);
+            Customer nextInService = customers.poll();
+            nextInService.srvBeg = event.time;
+            inService++;
+            depEvent.cust = nextInService;
+            events.add(depEvent);
         }
-        if(nextHop != null)
-            events.add(new Event(event.time, Event.ARRIVAL, nextHop));
+        if(nextHop != null) {
+            Event ev = new Event(event.time, Event.ARRIVAL, nextHop);
+            ev.cust = customer;
+            events.add(ev);
+        }
     }
 }

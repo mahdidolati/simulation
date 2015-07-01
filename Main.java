@@ -46,17 +46,17 @@ public class Main {
     }
     
     public static void simul() throws Exception {
-        Queue<Customer> fifoCustomers = new PriorityQueue<>(new FifoComparator());
-        Queue<Customer> sjfCustomers = new PriorityQueue<>(new FifoComparator());
-        Queue<Event> events = new PriorityQueue<>(new EventComparator());
-        Queue<Customer> fifoCustomers2 = new PriorityQueue<>(new FifoComparator());
-        QSystem proc = new QSystem(fifoCustomers2, events, 8, 0, 1.2, null);
-        QSystem pre1 = new SjfSystem(sjfCustomers, events, 1, 100, 6, 6, proc);
+        PriorityQueue<Customer> fifoCustomers = new PriorityQueue<>(new FifoComparator());
+        PriorityQueue<Customer> sjfCustomers = new PriorityQueue<>(new SjfComparator());
+        PriorityQueue<Event> events = new PriorityQueue<>(new EventComparator());
+        PriorityQueue<Customer> fifoCustomers2 = new PriorityQueue<>(new FifoComparator());
+        QSystem proc = new QSystem(fifoCustomers2, events, 5, 0, 1.2, null);
+        QSystem pre1 = new SjfSystem(sjfCustomers, events, 1, 7, 6, Integer.MAX_VALUE, proc);
         QSystem pre2 = new QSystem(fifoCustomers, events, 1, 2, 3, proc);
         events.add(new Event(0, Event.ARRIVAL, pre1));
         events.add(new Event(0, Event.ARRIVAL, pre2));
         double tt = 0;
-        for(int i=0; i<50000000; ++i) {
+        for(int i=0; i<100000; ++i) {
             Event event = events.poll();
             if(event.time < tt)
                 throw new Exception();
@@ -67,9 +67,19 @@ public class Main {
                 event.sys.finishService(event);
             }
         }
+        System.out.println("lambda proc: "+(proc.totalCustomers/tt)+" after: "+tt);
+        System.out.println("lambda pre1: "+(pre1.totalCustomers/tt)+" after: "+tt);
+        System.out.println("lambda pre2: "+(pre2.totalCustomers/tt)+" after: "+tt);
+        System.out.println("mu proc: "+(proc.servicedCustomers/tt)+" after: "+tt);
+        System.out.println("mu pre1: "+(pre1.servicedCustomers/tt)+" after: "+tt);
+        System.out.println("eff-mu pre2: "+(pre2.servicedCustomers/tt)+" after: "+tt);
         System.out.println("pre1) avg wait: " + pre1.avgWaitingTime 
                 + ", block prob: " + (((SjfSystem)pre1).blocked/pre1.totalCustomers));
         System.out.println("pre2) " + pre2.avgWaitingTime);
-        System.out.println("proc) avg wait: " + proc.avgWaitingTime + ", avg qLen: " + proc.qLen + ", avgLen2: " + proc.qLen2);
+        System.out.println("proc) avg wait: " + proc.avgWaitingTime 
+                + ", avg qLen: " + proc.qLen 
+                + ", avgLen2: " + proc.qLen2 
+                + ", time in q: " + proc.avgQTime
+        );
     }
 }

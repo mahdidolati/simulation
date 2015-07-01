@@ -9,13 +9,18 @@
  * @author mahdi
  */
 public class Customer {
+    double init_arrival;
     double arrivalTime;
     double serviceTime;
-    public Customer(double t) {
+    double inQ;
+    double id;
+    double srvBeg;
+    public Customer(int id, double t) {
         this.arrivalTime = t;
+        this.id = id;
     }
-    public Customer(double t, double s)  {
-        this.arrivalTime = t;
+    public Customer(int id, double t, double s)  {
+        this(id, t);
         this.serviceTime = s;
     }
     public void setServiceTime(double s) {
