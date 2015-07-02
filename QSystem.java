@@ -27,10 +27,10 @@ public class QSystem {
     double avgQTime;
     int counter;
     double inService;
+    double avgWhileSerivice;
     public QSystem(PriorityQueue<Customer> customers, 
             int capacity, int independentInRate, double serviceRate, QSystem nextHop) {
         this.customers = customers;
-        this.events = events;
         this.capacity = capacity;
         this.independentInRate = independentInRate;
         this.nextHop = nextHop;
@@ -38,6 +38,7 @@ public class QSystem {
         this.avgWaitingTime = this.totalCustomers = this.servicedCustomers = qLen = qLen2 = PrevQChangeTime = 0.0;
         avgQTime = 0.0;
         counter = 0;
+        avgWhileSerivice = 0.0;
     }
     
     public void newArrival(Event event) {
@@ -48,10 +49,14 @@ public class QSystem {
         if(event.cust != null) {
             customer.init_arrival = event.cust.arrivalTime;
             customer.inQ = event.cust.inQ;
+            customer.allService = event.cust.allService;
+//            customer.allService = 0.0;
         }
         counter++;
         if(inService < capacity) {
-            double t = event.time+RandVar.exponential(serviceRate);
+            double srvTime = RandVar.exponential(serviceRate);
+            double t = event.time+srvTime;
+            customer.allService += srvTime;
             Event depEvent = new Event(t, Event.DEPARTURE, this);
             customer.srvBeg = event.time;
             depEvent.cust = customer;
@@ -80,13 +85,17 @@ public class QSystem {
         customer.inQ = customer.inQ + customer.srvBeg-customer.arrivalTime;
         avgQTime = avgQTime*(this.servicedCustomers/(1+this.servicedCustomers))
                 + customer.inQ*(1.0/(1+this.servicedCustomers));
+        avgWhileSerivice = avgWhileSerivice*(this.servicedCustomers/(1+this.servicedCustomers))
+                + customer.allService*(1.0/(1+this.servicedCustomers));
         this.servicedCustomers++;
         //first capacity-1 customer has their departure event set already
         //you should wait until begining of service to schedule departure event
         if(!customers.isEmpty()) {
-            Event depEvent = new Event(event.time+RandVar.exponential(serviceRate), Event.DEPARTURE, this);
+            double srvTime = RandVar.exponential(serviceRate);
+            Event depEvent = new Event(event.time+srvTime, Event.DEPARTURE, this);
             Customer nextInService = customers.poll();
             nextInService.srvBeg = event.time;
+            nextInService.allService += srvTime;
             inService++;
             depEvent.cust = nextInService;
             events.add(depEvent);

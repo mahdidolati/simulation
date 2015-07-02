@@ -1,8 +1,5 @@
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import myMath.RandVar;
 
 /*
@@ -41,7 +38,8 @@ public class SjfSystem extends QSystem {
             if(inService < capacity) {
                 double t = event.time + customer.serviceTime;
                 Event e = new Event(t, Event.DEPARTURE, this);
-                e.begOfSer = event.time;
+                customer.srvBeg = event.time;
+                customer.allService = customer.serviceTime;
                 e.cust = customer;
                 events.add(e);
                 inService++;
@@ -59,17 +57,18 @@ public class SjfSystem extends QSystem {
         inService--;
         this.avgWaitingTime = this.avgWaitingTime*(this.servicedCustomers/(1+this.servicedCustomers))
                 +(event.time-customer.init_arrival)*(1.0/(1+this.servicedCustomers));
-        customer.inQ = event.begOfSer - customer.arrivalTime;
+        avgWhileSerivice = avgWhileSerivice*(this.servicedCustomers/(1+this.servicedCustomers))
+                +(customer.allService)*(1.0/(1+this.servicedCustomers));
+        customer.inQ = customer.srvBeg - customer.arrivalTime;
         this.servicedCustomers++;
-        //System.out.println("customer came at: " + customer.arrivalTime + " and leaved at: " + event.time);
-        //System.out.println("time in system: " + (event.time-customer.arrivalTime));
         //first capacity-1 customer has their departure event set already
         //you should wait until begining of service to schedule departure event
-        if(customers.size() >= capacity ) {
+        if(!customers.isEmpty()) {
             Customer nCustomer = (Customer)customers.poll();
             inService++;
             Event e = new Event(event.time+nCustomer.serviceTime, Event.DEPARTURE, this);
-            e.begOfSer = event.time;
+            nCustomer.srvBeg = event.time;
+            nCustomer.allService = nCustomer.serviceTime;
             e.cust = nCustomer;
             events.add(e);
         }

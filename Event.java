@@ -10,7 +10,6 @@
  */
 public class Event {
     double time;
-    double begOfSer;
     int type;
     QSystem sys;
     Customer cust;

@@ -15,6 +15,7 @@ public class Customer {
     double inQ;
     double id;
     double srvBeg;
+    double allService;
     public Customer(int id, double t) {
         this.arrivalTime = t;
         this.id = id;

@@ -42,7 +42,7 @@ public class Main {
         PriorityQueue<Customer> fifoCustomers = new PriorityQueue<>(new FifoComparator());
         PriorityQueue<Customer> sjfCustomers = new PriorityQueue<>(new SjfComparator());
         PriorityQueue<Customer> fifoCustomers2 = new PriorityQueue<>(new FifoComparator());
-        QSystem proc = new QSystem(fifoCustomers2, 5, 0, 1.2, null);
+        QSystem proc = new QSystem(fifoCustomers2, 7, 0, 1.2, null);
         QSystem pre1 = new SjfSystem(sjfCustomers, 1, 7, 6, 100, proc);
         QSystem pre2 = new QSystem(fifoCustomers, 1, 2, 3, proc);
         List<QSystem> systems = new LinkedList<>();
@@ -61,12 +61,13 @@ public class Main {
         System.out.println("mu pre1: "+(pre1.servicedCustomers/expTime)+" after: "+expTime);
         System.out.println("eff-mu pre2: "+(pre2.servicedCustomers/expTime)+" after: "+expTime);
         System.out.println("pre1) avg wait: " + pre1.avgWaitingTime 
-                + ", block prob: " + (((SjfSystem)pre1).blocked/pre1.totalCustomers));
-        System.out.println("pre2) avg wait: " + pre2.avgWaitingTime + ", inQ: " + pre2.avgQTime);
+                + ", block prob: " + (((SjfSystem)pre1).blocked/pre1.totalCustomers) + ", srvTime: " + pre1.avgWhileSerivice);
+        System.out.println("pre2) avg wait: " + pre2.avgWaitingTime + ", inQ: " + pre2.avgQTime + ", srvTime: " + pre2.avgWhileSerivice);
         System.out.println("proc) avg wait: " + proc.avgWaitingTime 
                 + ", avg qLen: " + proc.qLen 
                 + ", avgLen2: " + proc.qLen2 
-                + ", time in q: " + proc.avgQTime
+                + ", time in q: " + proc.avgQTime 
+                + ", service time: " + proc.avgWhileSerivice
         );
     }
 }
