@@ -27,7 +27,7 @@ public class QSystem {
     double avgQTime;
     int counter;
     double inService;
-    public QSystem(PriorityQueue<Customer> customers, PriorityQueue<Event> events, 
+    public QSystem(PriorityQueue<Customer> customers, 
             int capacity, int independentInRate, double serviceRate, QSystem nextHop) {
         this.customers = customers;
         this.events = events;

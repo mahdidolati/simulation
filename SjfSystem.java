@@ -20,9 +20,9 @@ public class SjfSystem extends QSystem {
     double blocked;
     int id;
     
-    public SjfSystem(PriorityQueue<Customer> customers, PriorityQueue<Event> events, 
+    public SjfSystem(PriorityQueue<Customer> customers, 
             int capacity, int independentInRate, double serviceRate, int maxLen, QSystem nextHop) {
-        super(customers, events, capacity, independentInRate, serviceRate, nextHop);
+        super(customers, capacity, independentInRate, serviceRate, nextHop);
         this.maxLen = maxLen;
         blocked = 0.0;
         id = 0;
